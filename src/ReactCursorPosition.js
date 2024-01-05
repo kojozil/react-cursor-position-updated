@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, cloneElement } from 'react';
+import React, { useState, useRef, useEffect, useCallback, cloneElement, Children } from 'react';
 import PropTypes from 'prop-types';
 import objectAssign from 'object-assign';
 import omit from 'object.omit';
@@ -8,7 +8,6 @@ import {
     INTERACTIONS,
     MOUSE_EMULATION_GUARD_TIMER_NAME
 } from './constants';
-import noop from './utils/noop';
 import PressActivation from './lib/PressActivation';
 import TouchActivation from './lib/TouchActivation';
 import TapActivation from './lib/TapActivation';
@@ -41,6 +40,7 @@ const ReactCursorPosition = ({
         isMouseDetected: false,
         isTouchDetected: false
     });
+
     const [elementDimensions, setElementDimensions] = useState({
         width: 0,
         height: 0
@@ -61,6 +61,7 @@ const ReactCursorPosition = ({
     });
     const elRef = useRef(null);
     const coreRef = useRef(null);
+    const touchActivationRef = useRef(null);
 
     const onTouchStart = useCallback((e) => {
         init();
@@ -71,7 +72,7 @@ const ReactCursorPosition = ({
         setPositionState(touchPosition);
 
         touchActivationRef.current.touchStarted({ e, position: touchPosition });
-    }, []);
+    }, [init, onTouchDetected, setShouldGuardAgainstMouseEmulationByDevices]);
 
     const onTouchMove = useCallback((e) => {
         if (!coreRef.current) {
@@ -91,17 +92,17 @@ const ReactCursorPosition = ({
         if (shouldStopTouchMovePropagation) {
             e.stopPropagation();
         }
-    }, [isActive, shouldStopTouchMovePropagation]);
+    }, [coreRef, isActive, setPositionState, shouldStopTouchMovePropagation]);
 
     const onTouchEnd = useCallback(() => {
         touchActivationRef.current.touchEnded();
         unsetShouldGuardAgainstMouseEmulationByDevices();
-    }, []);
+    }, [unsetShouldGuardAgainstMouseEmulationByDevices]);
 
     const onTouchCancel = useCallback(() => {
         touchActivationRef.current.touchCanceled();
         unsetShouldGuardAgainstMouseEmulationByDevices();
-    }, []);
+    }, [unsetShouldGuardAgainstMouseEmulationByDevices]);
 
     const onMouseEnter = useCallback((e) => {
         if (shouldGuardAgainstMouseEmulationByDevices.current) {
@@ -112,7 +113,7 @@ const ReactCursorPosition = ({
         onMouseDetected();
         setPositionState(coreRef.current.getCursorPosition(e));
         mouseActivationRef.current.mouseEntered();
-    }, []);
+    }, [init, onMouseDetected, setPositionState, shouldGuardAgainstMouseEmulationByDevices]);
 
     const onMouseMove = useCallback((e) => {
         if (!coreRef.current) {
@@ -122,18 +123,18 @@ const ReactCursorPosition = ({
         const mousePosition = coreRef.current.getCursorPosition(e);
         setPositionState(mousePosition);
         mouseActivationRef.current.mouseMoved(mousePosition);
-    }, []);
+    }, [coreRef, setPositionState]);
 
     const onMouseLeave = useCallback(() => {
         mouseActivationRef.current.mouseLeft();
         setIsPositionOutside(true);
-    }, []);
+    }, [mouseActivationRef]);
 
     const onClick = useCallback((e) => {
         setPositionState(coreRef.current.getCursorPosition(e));
         mouseActivationRef.current.mouseClicked();
         onMouseDetected();
-    }, []);
+    }, [coreRef, setPositionState]);
 
     const onIsActiveChanged = useCallback(({ isActive }) => {
         if (isActive) {
@@ -238,7 +239,7 @@ const ReactCursorPosition = ({
         }
 
         setPositionState(coreRef.current.getCursorPosition(lastMouseEvent));
-    }, [init]);
+    }, [init, setPositionState]);
 
     const activate = useCallback(() => {
         setIsActive(true);
@@ -265,7 +266,7 @@ const ReactCursorPosition = ({
             position
         });
         onPositionChanged({ isPositionOutside: isOutside, position });
-    }, [onPositionChanged]);
+    }, [onPositionChanged, getIsPositionOutside]);
 
     const setElementDimensionsState = useCallback((dimensions) => {
         setElementDimensions(dimensions);
@@ -365,7 +366,7 @@ const ReactCursorPosition = ({
         return omit(ownPropNames);
     }, []);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (isEnabled) {
             enable();
         }
@@ -392,6 +393,8 @@ const ReactCursorPosition = ({
             {decorateChildren(children, objectAssign({}, mapChildProps({ ...detectedEnvironment, ...position }), getPassThroughProps()))}
         </div>
     );
+
+    
 };
 
 ReactCursorPosition.propTypes = {

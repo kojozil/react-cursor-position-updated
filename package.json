@@ -6,18 +6,20 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kojozil/react-cursor-position-updated.git"
+    "url": "https://github.com/kojozil/react-cursor-position-updated.git"
   },
-  "main": "dist/index.js",
-  "module": "dist/index.modern.js",
-  "source": "dist/index.js",
+  "main": "dist/ReactCursorPosition.js",
+  "module": "dist/es/ReactCursorPosition.js",
+  "jsnext:main": "dist/es/ReactCursorPosition.js",
   "engines": {
     "node": ">=10"
   },
   "scripts": {
-    "build": "microbundle-crl --no-compress --format modern,cjs",
-    "start": "microbundle-crl watch --no-compress --format modern,cjs",
-    "prepare": "run-s build",
+    "build-umd": "webpack --mode production",
+    "build-cjs": "cross-env BABEL_ENV=cjs babel src --out-dir dist",
+    "build-es": "babel src --out-dir dist/es",
+    "build": "rimraf dist && npm run build-cjs && npm run build-es && npm run build-umd",
+    "build-watch": "cross-env BABEL_ENV=cjs babel --watch src --out-dir dist",
     "test": "run-s test:unit test:lint test:build",
     "test:build": "run-s build",
     "test:lint": "eslint .",
@@ -30,8 +32,12 @@
     "react": "^18.2.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.23.4",
+    "@babel/core": "^7.23.7",
+    "@babel/preset-env": "^7.23.7",
+    "@babel/preset-react": "^7.23.3",
     "babel-eslint": "^10.0.3",
-    "cross-env": "^7.0.2",
+    "cross-env": "^7.0.3",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.7.0",
     "eslint-config-standard": "^14.1.0",
@@ -43,7 +49,7 @@
     "eslint-plugin-react": "^7.17.0",
     "eslint-plugin-standard": "^4.0.1",
     "gh-pages": "^2.2.0",
-    "microbundle-crl": "^0.13.10",
+    "microbundle-crl": "^0.13.11",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.0.4",
     "react": "^18.2.0",
@@ -56,6 +62,10 @@
   "dependencies": {
     "object-assign": "^4.1.1",
     "object.omit": "^3.0.0",
-    "prop-types": "^15.8.1"
+    "prop-types": "^15.8.1",
+    "rimraf": "^5.0.5",
+    "webpack": "^5.89.0",
+    "webpack-bundle-analyzer": "^4.10.1",
+    "webpack-cli": "^5.1.4"
   }
 }
