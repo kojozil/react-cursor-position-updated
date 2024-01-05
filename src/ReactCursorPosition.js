@@ -51,8 +51,9 @@ const ReactCursorPosition = ({
     x: 0,
     y: 0
   });
-
+  const mouseActivationRef = useRef(null);
   const shouldGuardAgainstMouseEmulationByDevices = useRef(false);
+  const setShouldGuardAgainstMouseEmulationByDevices = useRef(() => {});
   const eventListeners = useRef([]);
   const timers = useRef([]);
   const elementOffset = useRef({
@@ -68,6 +69,24 @@ const ReactCursorPosition = ({
     console.log('Touch detected!');
   }, []);
 
+  const onMouseDetected = useCallback(() => {
+    const { isMouseDetected } = detectedEnvironment;
+  
+    if (!isMouseDetected) {
+      setDetectedEnvironment((prev) => ({
+        ...prev,
+        isMouseDetected: true,
+      }));
+  
+      if (onDetectedEnvironmentChanged) {
+        onDetectedEnvironmentChanged({
+          isMouseDetected: true,
+          isTouchDetected: detectedEnvironment.isTouchDetected,
+        });
+      }
+    }
+  }, [detectedEnvironment, onDetectedEnvironmentChanged]);
+  
   const onTouchStart = useCallback((e) => {
     init();
     onTouchDetected();
