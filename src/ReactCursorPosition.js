@@ -86,7 +86,7 @@ const ReactCursorPosition = ({
       }
     }
   }, [detectedEnvironment, onDetectedEnvironmentChanged]);
-  
+
   const onTouchStart = useCallback((e) => {
     init();
     onTouchDetected();
@@ -364,6 +364,20 @@ const ReactCursorPosition = ({
     const { width, height } = el.getBoundingClientRect();
     return { width, height };
   }, []);
+
+  const addEventListeners = useCallback(() => {
+    eventListeners.current.push(
+        addEventListener(elRef.current, 'touchstart', onTouchStart, { passive: false }),
+        addEventListener(elRef.current, 'touchmove', onTouchMove, { passive: false }),
+        addEventListener(elRef.current, 'touchend', onTouchEnd),
+        addEventListener(elRef.current, 'touchcancel', onTouchCancel),
+        addEventListener(elRef.current, 'mouseenter', onMouseEnter),
+        addEventListener(elRef.current, 'mousemove', onMouseMove),
+        addEventListener(elRef.current, 'mouseleave', onMouseLeave),
+        addEventListener(elRef.current, 'click', onClick)
+    );
+}, [onTouchStart, onTouchMove, onTouchEnd, onTouchCancel, onMouseEnter, onMouseMove, onMouseLeave, onClick]);
+
 
   const decorateChildren = useCallback((child, childProps) => {
     if (!shouldDecorateChildren) {
